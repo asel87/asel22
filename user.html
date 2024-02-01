@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Page</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="main.css">
+
+
+
+</head>
+
+
+<body>
+  
+    <header >
+      <div id="headerContent">
+        <h1>Welcome to your app!</h1>
+        <div>
+          <a href="#home"><i class="fas fa-home"></i> Home</a>
+          <a href="#about"><i class="fas fa-info-circle"></i> About Us</a>
+          <a href="#contact"><i class="fas fa-envelope"></i> Contact Us</a>
+          <button id="logoutButton" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+      </div>
+    </header><br>
+    <div id="container">
+    <div id="map"></div>
+
+    <form id="searchForm">
+      <label for="coordinates">Enter Coordinates (latitude, longitude): </label>
+      <input type="text" id="coordinates" name="coordinates" placeholder="e.g., 37.7749, -122.4194" required>
+      <button type="button" id="searchButton" onclick="searchLocation()">Search</button>
+    </form>
+
+    
+
+    <div id="exchangeRates">
+      <h2>Exchange Rates</h2>
+      <ul id="exchangeList"></ul>
+    </div>
+
+    
+    <div id="additionalInfo">
+      <div id="infoText">
+        <h2>The Significance of Exchange Rates</h2>
+        <p>Exchange rates represent the value of one currency in terms of another, influencing international trade and finance. These rates can either float based on market forces or be fixed by government policies. Economic indicators such as inflation, interest rates, and GDP growth impact exchange rates, along with political stability and market speculation. Currency pairs, like EUR/USD, express these rates, indicating how much one currency is worth in another. Exchange rate fluctuations can affect a country's trade competitiveness, making exports more or less attractive. Central banks intervene to stabilize their currency, often using monetary policy tools. The forex market, the world's largest financial market, facilitates currency trading globally. Globalization has intensified the importance of exchange rates in the interconnected world economy. Businesses and investors face exchange rate risks, impacting international transactions. Understanding these rates is crucial for effective global economic participation. Exchange rates play a pivotal role in shaping the dynamics of the international monetary system.</p>
+      </div>
+      <div id="infoImage">
+        <img src="img2.jpg" alt="fggg">
+      </div>
+    </div>
+
+    <div id="news">
+      <h2>News</h2>
+      <ul id="newsList"></ul>
+    </div>
+  </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Assel Aspandiyar. All rights reserved.</p>
+  </footer>
+
+
+  <script>
+    let map;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 15
+      });
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const initialLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            map.setCenter(initialLocation);
+            addMarker(initialLocation);
+          },
+          () => {
+            console.log('Error: The Geolocation service failed.');
+          }
+        );
+      } else {
+        console.log('Error: Your browser doesn\'t support geolocation.');
+      }
+    }
+
+    function addMarker(location) {
+      new google.maps.Marker({
+        position: location,
+        map: map,
+        title: 'Current Location'
+      });
+    }
+
+    function searchLocation() {
+      const coordinates = document.getElementById('coordinates').value.split(',').map(coord => parseFloat(coord.trim()));
+      if (coordinates.length !== 2 || isNaN(coordinates[0]) || isNaN(coordinates[1])) {
+        alert('Invalid coordinates. Please enter valid latitude and longitude.');
+        return;
+      }
+
+      map.setCenter({ lat: coordinates[0], lng: coordinates[1] });
+      addMarker({ lat: coordinates[0], lng: coordinates[1] });
+    }
+
+    function fetchExchangeRates() {
+    
+      fetch('/api/getCurrencyExchangeRate')
+        .then(response => response.json())
+        .then(data => {
+          const exchangeList = document.getElementById('exchangeList');
+          exchangeList.innerHTML = '';
+
+          for (const currency in data.exchangeRates) {
+            const rate = data.exchangeRates[currency];
+            const listItem = document.createElement('li');
+            listItem.innerText = `${currency}: ${rate}`;
+            exchangeList.appendChild(listItem);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching exchange rates:', error);
+        });
+    }
+
+    function fetchNews() {
+      
+      fetch('/api/getNews')
+        .then(response => response.json())
+        .then(data => {
+          const newsList = document.getElementById('newsList');
+          newsList.innerHTML = '';
+
+          data.news.forEach(article => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `<strong>${article.title}</strong><br>${article.description}`;
+            newsList.appendChild(listItem);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching news:', error);
+        });
+    }
+
+  
+    window.addEventListener('load', () => {
+      fetchExchangeRates();
+      fetchNews();
+    });
+    function logout() {
+      window.location.href = '/login.html';
+    }
+  </script>
+
+
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyARevZwHywd2XBgjYkJrx7m67kZq4hk1k8&callback=initMap"></script>
+</body>
+</html>
